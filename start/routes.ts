@@ -10,7 +10,9 @@ import Env from '#start/env'
 import router from '@adonisjs/core/services/router'
 
 import './routes/accounts.ts'
-import './routes/auth.js'
+import './routes/auth.ts'
+import './routes/customer.ts'
+import './routes/transaction.js'
 
 router
   .get('/', async () => {

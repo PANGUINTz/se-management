@@ -1,7 +1,7 @@
 import RelationUser from '#models/relation_user'
 import User from '#models/user'
 import { signInValidator, signUpValidator } from '#validators/auth'
-import { HttpContext } from '@adonisjs/core/http'
+import { HttpContext, Redirect } from '@adonisjs/core/http'
 import string from '@adonisjs/core/helpers/string'
 import hash from '@adonisjs/core/services/hash'
 import mail from '@adonisjs/mail/services/main'
@@ -10,8 +10,6 @@ export default class AuthensController {
   async authTokenGenerate(id: number) {
     try {
       const user = await User.findOrFail(id)
-      // const verifyUser = await User.verifyCredentials(user?.email, Env.get('APPLICATION_PASSWORD'))
-
       const token = await User.accessTokens.create(user)
 
       const response = {
@@ -37,19 +35,20 @@ export default class AuthensController {
           slug: string.random(20),
         })
         await mail.send((message) => {
-          message.to(user.email).from('ponphat').subject('Verify your email').html(`
+          message.to(user.email).from('pangza2544@gmail.com').subject('ยืนยันตัวตนอีเมลของคุณ')
+            .html(`
           <div>
-          <center><b>Verify your email</b></center>
-          <center><p>Thank for helping us keep your account secure! Click the button below to finish verifying your email address</p><center/>
-          <div style="padding:10px;width:100%;border-radius:20px;backgroud-color:white">
-          <a href="http://localhost:3333/api/auth/verify/${user.id}" style="text-decoration:none">CONFIRM EMAIL</a>
-          </div>
+          <p>สวัสดี</p>
+          <p>บัญชีของคุณสมัครเข้าสู่ระบบ คลิกลิ้งค์ข้างล่างเพื่อยืนยันอีเมลนี้</p>
+          <button style="padding:10px 15px;background-color:green;border:none;">
+          <a href="http://localhost:3333/auth/verify/${user.id}" style="text-decoration:none;color:white">ยืนยันอีเมล</a>
+          </button>
           </div>
           `)
         })
-        return response.send({ message: 'Success. email sent', success: true, code: 200 })
+        return response.send({ message: 'Success. email sent', status: true, code: 200 })
       }
-      return response.send({ message: 'Error, email already exists.', success: false, code: 400 })
+      return response.send({ message: 'Error, email already exists.', status: false, code: 400 })
     } catch (error) {
       console.log(error)
 
@@ -63,24 +62,45 @@ export default class AuthensController {
 
       const user = await User.findBy('email', payload.email)
       if (!user) {
-        return response.send({ message: 'Error, not found user.', success: false, code: 404 })
+        return response.send({ message: 'Error, not found user.', status: false, code: 404 })
       }
 
       if (!user.isActive) {
-        return response.send({ message: 'please verify your email', success: false, code: 400 })
+        return response.send({ message: 'please verify your email', status: false, code: 400 })
       }
 
       const hashedPassword = await hash.verify(user.password, payload.password)
       if (!hashedPassword) {
         return response.send({
           message: 'Error, password is not correct',
-          success: false,
+          status: false,
           code: 400,
         })
       }
 
       const token = await this.authTokenGenerate(user.id)
-      response.send({ message: 'Success', success: true, data: token })
+      response.send({ message: 'Success', status: true, data: token })
+    } catch (error) {
+      return response.send({ message: 'Error.', status: false, error: error?.code })
+    }
+  }
+
+  async mail({ response, request }: HttpContext) {
+    try {
+      const payload = request.all()
+      await mail.send((message) => {
+        message.to(payload.email).from('pangza2544@gmail.com').subject('ยืนยันตัวตนอีเมลของคุณ')
+          .html(`
+        <div>
+        <p>สวัสดี</p>
+        <p>บัญชีของคุณสมัครเข้าสู่ระบบ คลิกลิ้งค์ข้างล่างเพื่อยืนยันอีเมลนี้</p>
+        <button style="padding:5px 15px;background-color:green;border:none;">
+        <a href="http://localhost:3333/api/auth/verify/${payload.id}" style="text-decoration:none;color:white">ยืนยันอีเมล</a>
+        </button>
+        </div>
+        `)
+      })
+      return response.send({ message: 'Success. email sent', status: true, code: 200 })
     } catch (error) {
       return response.send({ message: 'Error.', status: false, error: error?.code })
     }
@@ -90,7 +110,7 @@ export default class AuthensController {
     try {
       const { id } = request.params()
       await User.query().where('id', id).update('is_active', true)
-      return response.send('<center> Email Confirmed </center>')
+      return response.redirect('https://www.google.com')
     } catch (error) {
       return response.send({ message: 'Error.', status: false, error: error?.code })
     }
