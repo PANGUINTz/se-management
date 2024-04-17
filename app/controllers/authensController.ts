@@ -1,7 +1,7 @@
 import RelationUser from '#models/relation_user'
 import User from '#models/user'
 import { signInValidator, signUpValidator } from '#validators/auth'
-import { HttpContext, Redirect } from '@adonisjs/core/http'
+import { HttpContext } from '@adonisjs/core/http'
 import string from '@adonisjs/core/helpers/string'
 import hash from '@adonisjs/core/services/hash'
 import mail from '@adonisjs/mail/services/main'
