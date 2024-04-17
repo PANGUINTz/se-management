@@ -33,6 +33,8 @@ export default class TransactionsController {
       customer.save()
       return response.send({ message: 'Success.', status: true, code: 201 })
     } catch (error) {
+      console.log(error)
+
       return response.send({ message: 'Error.', status: false, error: error?.code })
     }
   }
